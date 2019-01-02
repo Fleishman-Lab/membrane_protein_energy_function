@@ -1,0 +1,26 @@
+<ROSETTASCRIPTS>
+  <SCOREFXNS>
+    <ScoreFunction name="scfxn" weights="ref2015_memb" symmetric="1"/>
+  </SCOREFXNS>
+  <TASKOPERATIONS>
+    <RestrictToRepacking name="rtr"/>
+  </TASKOPERATIONS>
+  <MOVERS>
+    <SetupForSymmetry name="symm" definition="%%symm_file%%"/>
+    <DetectSymmetry name="detect" subunit_tolerance="0.01" plane_tolerance="0.001"/>
+    <SymmetricAddMembraneMover name="add_memb" membrane_core="10" steepness="4" span_starts="%%span_starts%%" span_ends="%%span_ends%%" span_orientations="%%span_oris%%"/>
+    <TransformIntoMembraneMover name="transform"/>
+    <FlipMover name="flip"/>
+    <DumpPdb name="dump_pdb" fname="dump.pdb" scorefxn="scfxn"/>
+  </MOVERS>
+  <FILTERS>
+  </FILTERS>
+  <PROTOCOLS>
+    <!--<Add mover="detect"/>-->
+    <Add mover="symm"/>
+    <Add mover="dump_pdb"/>
+    <Add mover="add_memb"/>
+    <Add mover="transform"/>
+  </PROTOCOLS>
+  <OUTPUT scorefxn="scfxn"/>
+</ROSETTASCRIPTS>

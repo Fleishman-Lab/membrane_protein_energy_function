@@ -1,0 +1,30 @@
+<ROSETTASCRIPTS>
+  <SCOREFXNS>
+    <ScoreFunction name="full" weights="%%scfxn%%" symmetric="0">
+      <!--<Reweight scoretype="coordinate_constraint" weight="%%cst_value%%"/>-->
+    </ScoreFunction>
+  </SCOREFXNS>
+  <RESIDUE_SELECTORS>
+  </RESIDUE_SELECTORS>
+  <TASKOPERATIONS>
+    <InitializeFromCommandline name="init"/>
+  </TASKOPERATIONS>
+  <MOVERS>
+    <AddMembraneMover name="add_memb" membrane_core="%%membrane_core%%" steepness="%%steepness%%" span_starts="%%span_starts%%" span_ends="%%span_ends%%" span_orientations="%%span_oris%%"/>
+    <PackRotamersMover name="repack" scorefxn="full" task_operations="init"/>
+    <!--<ConstraintSetMover name="add_CA_cst" cst_file="%%cst_full_path%%"/>-->
+  </MOVERS>
+  <FILTERS>
+    <ScoreType name="stability_score_full" scorefxn="full" score_type="total_score" confidence="0" threshold="0"/>
+    <Time name="timer"/>
+  </FILTERS>
+  <PROTOCOLS>
+    <Add filter="timer"/>
+    <Add mover="add_memb"/>
+    <!--<Add mover="add_CA_cst"/>-->
+    <Add mover="repack"/>
+    <Add filter="stability_score_full"/>
+    <Add filter="timer"/>
+  </PROTOCOLS>
+  <OUTPUT scorefxn="full"/>
+</ROSETTASCRIPTS>

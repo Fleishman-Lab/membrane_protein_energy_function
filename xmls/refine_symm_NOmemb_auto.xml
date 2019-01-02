@@ -1,0 +1,57 @@
+<ROSETTASCRIPTS>
+  <TASKOPERATIONS>
+    <InitializeFromCommandline name="init"/>
+    <RestrictToRepacking name="rtr"/>
+  </TASKOPERATIONS>
+  <SCOREFXNS>
+    <ScoreFunction name="full" weights="ref2015" symmetric="1">
+      <Reweight scoretype="coordinate_constraint" weight="%%cst_value%%"/>
+    </ScoreFunction>
+    <ScoreFunction name="soft" weights="ref2015_soft" symmetric="1">
+      <Reweight scoretype="coordinate_constraint" weight="%%cst_value%%"/>
+    </ScoreFunction>
+    <ScoreFunction name="ref_pure" weights="ref2015" symmetric="1"/>
+  </SCOREFXNS>
+  <RESIDUE_SELECTORS>
+  </RESIDUE_SELECTORS>
+  <MOVERS>
+    <SetupForSymmetry name="symm" definition="%%symm_file%%"/>
+    <SymPackRotamersMover name="soft_repack" scorefxn="soft%%mpf%%" task_operations="init,rtr"/>
+    <SymPackRotamersMover name="hard_repack" scorefxn="full%%mpf%%" task_operations="init,rtr"/>
+    <RotamerTrialsMinMover name="RTmin" scorefxn="full" task_operations="init,rtr"/>
+    <SymMinMover name="soft_min" scorefxn="soft%%mpf%%" chi="1" bb="1" jump="0"/>
+    <SymMinMover name="hard_min" scorefxn="full%%mpf%%" chi="1" bb="1" jump="0"/>
+    <ConstraintSetMover name="add_CA_cst" cst_file="%%cst_full_path%%"/>
+    <ParsedProtocol name="refinement_block"> #10 movers
+      <Add mover_name="soft_repack"/>
+      <Add mover_name="soft_min"/>
+      <Add mover_name="soft_repack"/>
+      <Add mover_name="hard_min"/>
+      <Add mover_name="hard_repack"/>
+      <Add mover_name="hard_min"/>
+      <Add mover_name="hard_repack"/>
+      <Add mover_name="RTmin"/>
+      <Add mover_name="RTmin"/>
+      <Add mover_name="hard_min"/>
+    </ParsedProtocol>
+    <LoopOver name="iter4" mover_name="refinement_block" iterations="4"/> #16 reacpk+min iterations total
+    <DumpPdb name="dump_pdb" fname="dump.pdb"/>
+  </MOVERS>
+  <FILTERS>
+    <ScoreType name="stability_score_full" scorefxn="full%%mpf%%" score_type="total_score" confidence="0" threshold="0"/>
+    <ScoreType name="stability_pure" scorefxn="ref_pure%%mpf%%" score_type="total_score" confidence="0" threshold="0"/>
+    <Rmsd name="rmsd" confidence="0"/>
+    <Time name="timer"/>
+  </FILTERS>
+  <PROTOCOLS>
+    <Add mover="symm"/>
+    <Add filter="timer"/>
+    <Add mover="add_CA_cst"/>
+    <!--<Add mover="dump_pdb"/>-->
+    <Add mover="iter4"/>
+    <Add filter="stability_score_full"/>
+    <Add filter="stability_pure"/>
+    <Add filter="timer"/>
+  </PROTOCOLS>
+  <OUTPUT scorefxn="full%%mpf%%"/>
+</ROSETTASCRIPTS>

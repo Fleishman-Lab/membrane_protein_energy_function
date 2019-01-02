@@ -1,0 +1,80 @@
+<ROSETTASCRIPTS>
+  <SCOREFXNS>
+    <ScoreFunction name="full" weights="ref2015_memb" symmetric="0">
+      <Reweight scoretype="coordinate_constraint" weight="%%cst_value%%"/>
+    </ScoreFunction>
+    <ScoreFunction name="soft" weights="ref2015_soft" symmetric="0">
+      <Reweight scoretype="mp_res_lipo" weight="1"/>
+      <Reweight scoretype="coordinate_constraint" weight="%%cst_value%%"/>
+    </ScoreFunction>
+    <ScoreFunction name="ref_pure" weights="ref2015_memb" symmetric="0"/>
+    <ScoreFunction name="helicality" symmetric="1">
+      <Reweight scoretype="mp_helicality" weight="1"/>
+    </ScoreFunction>
+
+    <ScoreFunction name="full_mpf" weights="mpframework_docking_fa_2015" symmetric="0">
+      <Reweight scoretype="coordinate_constraint" weight="%%cst_value%%"/>
+    </ScoreFunction>
+    <ScoreFunction name="soft_mpf" weights="mpframework_docking_fa_2015" symmetric="0">
+      <Reweight scoretype="coordinate_constraint" weight="%%cst_value%%"/>
+    </ScoreFunction>
+    <ScoreFunction name="ref_pure_mpf" weights="mpframework_docking_fa_2015.wts" symmetric="0"/>
+  </SCOREFXNS>
+  <RESIDUE_SELECTORS>
+  </RESIDUE_SELECTORS>
+  <TASKOPERATIONS>
+    <InitializeFromCommandline name="init"/>
+    <RestrictToRepacking name="rtr"/>
+  </TASKOPERATIONS>
+  <MOVERS>
+    <AddMembraneMover name="add_memb" membrane_core="10" steepness="4" span_starts="%%span_starts%%" span_ends="%%span_ends%%" span_orientations="%%span_oris%%"/>
+    <PackRotamersMover name="soft_repack" scorefxn="soft%%mpf%%" task_operations="init,rtr"/>
+    <PackRotamersMover name="hard_repack" scorefxn="full%%mpf%%" task_operations="init,rtr"/>
+    <RotamerTrialsMinMover name="RTmin" scorefxn="full" task_operations="init,rtr"/>
+    <MinMover name="soft_min" scorefxn="soft%%mpf%%" chi="1" bb="1" jump="0"/>
+    <MinMover name="hard_min" scorefxn="full%%mpf%%" chi="1" bb="1" jump="0"/>
+    <ConstraintSetMover name="add_CA_cst" cst_file="%%cst_full_path%%"/>
+    <ParsedProtocol name="refinement_block"> #10 movers
+      <Add mover_name="soft_repack"/>
+      <Add mover_name="soft_min"/>
+      <Add mover_name="soft_repack"/>
+      <Add mover_name="hard_min"/>
+      <Add mover_name="hard_repack"/>
+      <Add mover_name="hard_min"/>
+      <Add mover_name="hard_repack"/>
+      <Add mover_name="RTmin"/>
+      <Add mover_name="RTmin"/>
+      <Add mover_name="hard_min"/>
+    </ParsedProtocol>
+    <LoopOver name="iter4" mover_name="refinement_block" iterations="4"/> #16 reacpk+min iterations total
+    <DumpPdb name="dump_pdb" fname="dump.pdb"/>
+  </MOVERS>
+  <FILTERS>
+    <ScoreType name="stability_score_full" scorefxn="full%%mpf%%" score_type="total_score" confidence="0" threshold="0"/>
+    <ScoreType name="stability_pure" scorefxn="ref_pure%%mpf%%" score_type="total_score" confidence="0" threshold="0"/>
+    <Rmsd name="rmsd" confidence="0"/>
+    <ResidueLipophilicity name="a_res_lipo" threshold="1000" confidence="0"/>
+    <SpanTopologyMatchPose name="a_span_topo" confidence="0"/>
+    <TMsSpanMembrane name="a_tms_span" confidence="0" min_distance="25"/>
+    <MembAccesResidueLipophilicity name="a_marl" confidence="0" verbose="0"/>
+    <ScoreType name="a_helicality" scorefxn="helicality" score_type="mp_helicality" confidence="0" threshold="10"/>
+    <Time name="timer"/>
+  </FILTERS>
+  <PROTOCOLS>
+    <Add mover="add_memb"/>
+    <Add filter="timer"/>
+    <Add mover="add_CA_cst"/>
+    <!--<Add mover="dump_pdb"/>-->
+    <Add mover="iter4"/>
+    <Add filter="stability_score_full"/>
+    <Add filter="stability_pure"/>
+    <Add filter="a_res_lipo"/>
+    <Add filter="a_span_topo"/>
+    <Add filter="a_tms_span"/>
+    <Add filter="a_marl"/>
+    <Add filter="a_helicality"/>
+    <Add filter="timer"/>
+  </PROTOCOLS>
+  <OUTPUT scorefxn="full%%mpf%%"/>
+</ROSETTASCRIPTS>
+

@@ -1,0 +1,38 @@
+<ROSETTASCRIPTS>
+  <SCOREFXNS>
+    <ScoreFunction name="full" weights="%%scfxn%%" symmetric="1">
+      <Reweight scoretype="aa_composition" weight="%%aa_comp%%"/>
+      <!--<Reweight scoretype="coordinate_constraint" weight="%%cst_value%%"/>-->
+    </ScoreFunction>
+  </SCOREFXNS>
+  <RESIDUE_SELECTORS>
+    %%add_comp%%ResidueInMembrane name="in_memb" select_in_membrane="1"/>
+  </RESIDUE_SELECTORS>
+  <TASKOPERATIONS>
+    <InitializeFromCommandline name="init"/>
+  </TASKOPERATIONS>
+  <MOVERS>
+    %%add_memb%%SymmetricAddMembraneMover name="add_memb" membrane_core="10" steepness="4" span_starts="%%span_starts%%" span_ends="%%span_ends%%" span_orientations="%%span_oris%%"/>
+  %%add_comp%%AddCompositionConstraintMover name="add_aa_comp_cst" filename="/home/labs/fleishman/jonathaw/elazaridis/sequence_recovery/refinements/memb_prot.comp" selector="in_memb"/>
+    <SetupForSymmetry name="symm" definition="%%symm_file%%"/>
+    <SymPackRotamersMover name="repack" scorefxn="full" task_operations="init"/>
+    <!--<ConstraintSetMover name="add_CA_cst" cst_file="%%cst_full_path%%"/>-->
+  </MOVERS>
+  <FILTERS>
+    <ScoreType name="stability_score_full" scorefxn="full" score_type="total_score" confidence="0" threshold="0"/>
+    <!--<SequenceRecovery name="a_seq_rec" report_mutations="1" scorefxn="full" verbose="1"/>-->
+    <Time name="timer"/>
+  </FILTERS>
+  <PROTOCOLS>
+    <Add filter="timer"/>
+    <Add mover="symm"/>
+    %%add_memb%%Add mover="add_memb"/>
+    %%add_comp%%Add mover="add_aa_comp_cst"/>
+    <!--<Add mover="add_CA_cst"/>-->
+    <Add mover="repack"/>
+    <Add filter="stability_score_full"/>
+    <!--<Add filter="a_seq_rec"/>-->
+    <Add filter="timer"/>
+  </PROTOCOLS>
+  <OUTPUT scorefxn="full"/>
+</ROSETTASCRIPTS>
